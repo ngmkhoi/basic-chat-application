@@ -2,9 +2,10 @@ const authModel = require("../models/auth.model");
 const bcrypt = require('bcrypt');
 const saltRounds = 10;
 const jwt = require('jsonwebtoken');
+const {secret} = require("../config/jwt");
 
 class AuthService {
-async login({ email, password }) {
+    async login({ email, password }) {
         const user = await authModel.findByEmail(email);
         if (!user) {
             throw new Error('Invalid email or password');
@@ -17,7 +18,7 @@ async login({ email, password }) {
 
         const token = jwt.sign(
             {id: user.id, email: user.email},
-            process.env.JWT_SECRET,
+            secret,
             {expiresIn: '24h'}
         )
 
@@ -46,7 +47,7 @@ async login({ email, password }) {
 
         const token = jwt.sign(
             {id: newUser.id, email: newUser.email},
-            process.env.JWT_SECRET,
+            secret,
             {expiresIn: '24h'}
         )
 
