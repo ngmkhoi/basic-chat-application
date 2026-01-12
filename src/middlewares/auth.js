@@ -4,8 +4,7 @@ require('dotenv').config();
 
 const authMiddleware = async (req, res, next) => {
     const authHeader = req.headers["authorization"];
-
-    const token = authHeader && authHeader.split(' ')[1];
+    const token = authHeader?.replace('Bearer', '')?.trim();
 
     if (!token) {
         return res.error(401, "Token not found, please log in.")
