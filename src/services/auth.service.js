@@ -58,6 +58,12 @@ class AuthService {
     }
     async createNewToken(refreshToken) {
         let decoded;
+
+        const tokenInDB = await refreshTokenModel.findByToken(refreshToken);
+        if (!tokenInDB) {
+            throw new Error('Invalid refresh token');
+        }
+
         try {
             decoded = jwt.verify(refreshToken, SecretRefresh)
         } catch (error) {
@@ -66,12 +72,10 @@ class AuthService {
             }
             throw new Error('Invalid refresh token');
         }
-        const tokenInDB = await refreshTokenModel.findByToken(refreshToken);
-        if (!tokenInDB) {
-            throw new Error('Invalid refresh token');
-        }
 
-        const {accessToken, newRefreshToken} = await tokenGenerate(decoded, expiresAt);
+        const user = { id: decoded.id, email: decoded.email }
+
+        const {accessToken, newRefreshToken} = await tokenGenerate(user, expiresAt);
         await refreshTokenModel.revokeToken(refreshToken);
 
         return {
@@ -84,7 +88,15 @@ class AuthService {
         }
     }
     async logoutUser(refreshToken) {
-        await refreshTokenModel.revokeToken(refreshToken);
+        const tokenInDB = await refreshTokenModel.findByToken(refreshToken);
+        if (!tokenInDB) {
+            throw new Error('Invalid refresh token');
+        }
+
+        const success = await refreshTokenModel.revokeToken(refreshToken);
+        if(!success) {
+            throw new Error('Failed to logout');
+        }
         return { message: 'Logged out successfully' };
     }
 }

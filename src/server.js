@@ -4,6 +4,7 @@ const port = process.env.PORT || 8080;
 const host = process.env.HOST || '0.0.0.0';
 const cors = require('cors');
 require('./config/database')
+const cookieParser = require('cookie-parser');
 const router = require("./routes");
 const responseFormat = require("./middlewares/responseFormat");
 const notFound = require("./middlewares/notFound");
@@ -28,6 +29,7 @@ server.use(cors({
 }));
 
 server.use(express.json());
+server.use(cookieParser());
 server.use(responseFormat);
 
 server.get('/', (req, res) => {

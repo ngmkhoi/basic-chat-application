@@ -3,13 +3,23 @@ const authService = require('../services/auth.service');
 const login = async (req, res) => {
     try {
         const { email, password } = req.body;
-        const user = await authService.login({email, password});
+        const result = await authService.login({email, password});
 
-        if (!user) {
+        if (!result) {
             return res.error(401, 'Invalid email or password')
         }
 
-        res.success(user, 200);
+        res.cookie('refreshToken', result.refreshToken, {
+            httpOnly: true,
+            secure: false,
+            path: '/',
+            sameSite: 'strict'
+        });
+
+        res.success({
+            user: result.user,
+            accessToken: result.accessToken,
+        }, 200);
     } catch (error) {
         if (error.message === 'Invalid email or password') {
             return res.error(401, 'Invalid email or password');
@@ -21,8 +31,19 @@ const login = async (req, res) => {
 const createUser = async (req, res) => {
     try {
         const { email, password, full_name } = req.body;
-        const user = await authService.register({ email, password, full_name });
-        res.success(user, 201);
+        const result = await authService.register({ email, password, full_name });
+
+        res.cookie('refreshToken', result.refreshToken, {
+            httpOnly: true,
+            secure: false,
+            path: '/',
+            sameSite: 'strict'
+        });
+
+        res.success({
+            user: result.user,
+            accessToken: result.accessToken,
+        }, 201);
     } catch (error) {
         if (error.message === 'User already exists') {
             return res.error(409, error.message);
@@ -33,13 +54,22 @@ const createUser = async (req, res) => {
 
 const refreshToken = async (req, res) => {
     try {
-        const authHeader = req.headers["authorization"];
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        const refreshToken = req.cookies.refreshToken;
+        if (!refreshToken) {
             return res.error(401, 'Refresh token required');
         }
-        const token = authHeader?.replace('Bearer', '')?.trim();
-        const result = await authService.createNewToken(token);
-        res.success(result, 200);
+        const result = await authService.createNewToken(refreshToken);
+        res.cookie('refreshToken', result.refreshToken, {
+            httpOnly: true,
+            secure: false,
+            path: '/',
+            sameSite: 'strict'
+        });
+
+        res.success({
+            user: result.user,
+            accessToken: result.accessToken
+        }, 200);
     } catch (error) {
         if (error.message.includes('Invalid') || error.message.includes('expired')) {
             return res.error(403, error.message);
@@ -50,13 +80,13 @@ const refreshToken = async (req, res) => {
 
 const logout = async (req, res) => {
     try {
-        const authHeader = req.headers["authorization"];
-        if (!authHeader || !authHeader.startsWith('Bearer ')) {
+        const refreshToken = req.cookies.refreshToken;
+        if (!refreshToken) {
             return res.error(401, 'Refresh token required');
         }
-        const token = authHeader?.replace('Bearer', '')?.trim();
-        const result = await authService.logoutUser(token);
+        const result = await authService.logoutUser(refreshToken);
         res.success(result, 200);
+        res.clearCookie('refreshToken');
     } catch (error) {
         res.error(500, error.message);
     }

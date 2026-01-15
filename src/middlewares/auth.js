@@ -14,7 +14,10 @@ const authMiddleware = async (req, res, next) => {
         req.user = jwt.verify(token, SecretAccess);
         next();
     } catch (error) {
-        return res.status(403).json({ message: "Token is invalid or expired." });
+        if (error instanceof jwt.TokenExpiredError) {
+            return res.error(401, 'Access token expired');
+        }
+        return res.error(403, 'Invalid access token');
     }
 }
 
