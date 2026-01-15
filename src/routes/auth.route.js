@@ -1,0 +1,12 @@
+const express = require("express");
+const {joiValidate} = require("../middlewares/joiValidate");
+const {registerSchema, loginSchema} = require("../schemas/userSchema");
+const authController = require("../controllers/auth.controller");
+const router = express.Router();
+
+router.post("/register", joiValidate(registerSchema), authController.createUser);
+router.post("/login", joiValidate(loginSchema), authController.login);
+router.post("/refresh", authController.refreshToken); 
+router.post("/logout", authController.logout);  
+
+module.exports = router;
