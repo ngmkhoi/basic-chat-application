@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt');
 const saltRounds = process.env.SALT_ROUNDS;
 const jwt = require('jsonwebtoken');
 const {SecretRefresh} = require("../config/jwt");
-const { AUTH } = require("../config/constants");
+const { AUTH, ERROR_MESSAGES } = require("../config/constants");
 const tokenGenerate = require("../helpers/generateToken");
 
 const expiresAt = new Date(Date.now() + AUTH.REFRESH_TOKEN_EXPIRY_MS);
@@ -13,12 +13,12 @@ class AuthService {
     async login({ email, password }) {
         const user = await authModel.findByEmail(email);
         if (!user) {
-            throw new Error('Invalid email or password');
+            throw new Error(ERROR_MESSAGES.INVALID_CREDENTIALS);
         }
 
         const isPasswordValid = await bcrypt.compare(password, user.password);
         if (!isPasswordValid) {
-            throw new Error('Invalid email or password');
+            throw new Error(ERROR_MESSAGES.INVALID_CREDENTIALS);
         }
 
         const {accessToken, refreshToken} = await tokenGenerate(user, expiresAt);
@@ -37,7 +37,7 @@ class AuthService {
         try {
             const existingUser = await authModel.checkEmailExists(payload.email);
             if (existingUser) {
-                throw new Error('User already exists');
+                throw new Error(ERROR_MESSAGES.USER_ALREADY_EXISTS);
             }
 
             const hashedPassword = await bcrypt.hash(payload.password, parseInt(saltRounds));
@@ -64,20 +64,27 @@ class AuthService {
             throw error;
         }
     }
+    async getCurrentUser(userId) {
+        const userInformation = await authModel.findById(userId);
+        if (!userInformation) {
+            throw new Error('User does not exist');
+        }
+        return userInformation;
+    }
     async createNewToken(refreshToken) {
         let decoded;
         const tokenInDB = await refreshTokenModel.findByToken(refreshToken);
         if (!tokenInDB) {
-            throw new Error('Invalid refresh token');
+            throw new Error(ERROR_MESSAGES.INVALID_REFRESH_TOKEN);
         }
 
         try {
             decoded = jwt.verify(refreshToken, SecretRefresh)
         } catch (error) {
             if (error instanceof jwt.TokenExpiredError) {
-                throw new Error('Refresh token expired');
+                throw new Error(ERROR_MESSAGES.REFRESH_TOKEN_EXPIRED);
             }
-            throw new Error('Invalid refresh token');
+            throw new Error(ERROR_MESSAGES.INVALID_REFRESH_TOKEN);
         }
 
         const user = { id: decoded.id, email: decoded.email }
@@ -97,14 +104,14 @@ class AuthService {
     async logoutUser(refreshToken) {
         const tokenInDB = await refreshTokenModel.findByToken(refreshToken);
         if (!tokenInDB) {
-            throw new Error('Invalid refresh token');
+            throw new Error(ERROR_MESSAGES.INVALID_REFRESH_TOKEN);
         }
 
         const success = await refreshTokenModel.revokeToken(refreshToken);
         if(!success) {
-            throw new Error('Failed to logout');
+            throw new Error(ERROR_MESSAGES.FAILED_LOGOUT);
         }
-        return { message: 'Logged out successfully' };
+        return { message: ERROR_MESSAGES.LOGOUT_SUCCESS };
     }
 }
 

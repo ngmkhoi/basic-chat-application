@@ -1,4 +1,5 @@
 const conversationService = require('../services/conversation.service');
+const { HTTP_STATUS, ERROR_MESSAGES } = require('../config/constants');
 
 const conversationController = {
     create: async (req, res) => {
@@ -14,15 +15,15 @@ const conversationController = {
             });
 
             if (result.isExisting) {
-                return res.success(result, 200)
+                return res.success(result, HTTP_STATUS.OK)
             }
 
             res.success(
                 result,
-                201
+                HTTP_STATUS.CREATED
             )
         } catch (error) {
-            res.error(400, error.message)
+            res.error(HTTP_STATUS.BAD_REQUEST, error.message)
         }
     },
     getUserConversation: async (req, res) => {
@@ -31,10 +32,10 @@ const conversationController = {
             const result = await conversationService.getConversation(currentUserId);
             res.success(
                 result,
-                201
+                HTTP_STATUS.OK
             )
         } catch (error) {
-            res.error(500, error.message)
+            res.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message)
         }
     },
     addParticipant: async (req, res) => {
@@ -44,7 +45,7 @@ const conversationController = {
             const requesterId = req.user.id;
 
             if (!user_id) {
-                return res.status(400).json({ message: "user_id is required." });
+                return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: ERROR_MESSAGES.USER_ID_REQUIRED });
             }
 
             const result = await conversationService.addParticipantToGroup({
@@ -53,10 +54,10 @@ const conversationController = {
                 requesterId
             });
 
-            res.status(200).json(result);
+            res.status(HTTP_STATUS.OK).json(result);
 
         } catch (error) {
-            res.status(400).json({ message: error.message });
+            res.status(HTTP_STATUS.BAD_REQUEST).json({ message: error.message });
         }
     },
     
@@ -67,7 +68,7 @@ const conversationController = {
             const senderId = req.user.id;
 
             if (!content || content.trim() === '') {
-                return res.error(400, "Message content is required.");
+                return res.error(HTTP_STATUS.BAD_REQUEST, ERROR_MESSAGES.CONTENT_REQUIRED);
             }
 
             const result = await conversationService.sendMessage({
@@ -76,10 +77,10 @@ const conversationController = {
                 content: content.trim()
             });
 
-            res.success(result, 201);
+            res.success(result, HTTP_STATUS.CREATED);
 
         } catch (error) {
-            res.error(400, error.message);
+            res.error(HTTP_STATUS.BAD_REQUEST, error.message);
         }
     },
 
@@ -93,10 +94,10 @@ const conversationController = {
                 userId
             });
 
-            res.success(messages, 200);
+            res.success(messages, HTTP_STATUS.OK);
 
         } catch (error) {
-            res.error(400, error.message);
+            res.error(HTTP_STATUS.BAD_REQUEST, error.message);
         }
     }
 };

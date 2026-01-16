@@ -24,8 +24,14 @@ const createUser = async (data) => {
     return users[0] || null;
 }
 
+const findById = async (userId) => {
+    const [users] = await pool.query("select id, email, full_name, verified_at, created_at, updated_at from users where id = ?", [userId]);
+    return users[0] || null;
+}
+
 module.exports = {
     findByEmail,
     checkEmailExists,
     createUser,
+    findById
 }

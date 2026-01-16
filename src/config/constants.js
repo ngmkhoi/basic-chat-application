@@ -64,6 +64,7 @@ const HTTP_STATUS = {
     FORBIDDEN: 403,
     NOT_FOUND: 404,
     CONFLICT: 409,
+    UNPROCESSABLE_ENTITY: 422,
     INTERNAL_SERVER_ERROR: 500,
 };
 
@@ -90,6 +91,12 @@ const ERROR_MESSAGES = {
     CONVERSATION_EXISTS: 'This conversation has already existed.',
 };
 
+// ========== RESPONSE MESSAGES ==========
+const RESPONSE_MESSAGES = {
+    SUCCESS: 'success',
+    ERROR: 'error',
+};
+
 module.exports = {
     SERVER,
     CORS,
@@ -101,4 +108,5 @@ module.exports = {
     SEARCH,
     HTTP_STATUS,
     ERROR_MESSAGES,
+    RESPONSE_MESSAGES,
 };

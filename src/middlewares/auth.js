@@ -1,5 +1,6 @@
 const jwt = require('jsonwebtoken');
 const {SecretAccess} = require("../config/jwt");
+const { HTTP_STATUS, ERROR_MESSAGES } = require('../config/constants');
 require('dotenv').config();
 
 const authMiddleware = async (req, res, next) => {
@@ -7,7 +8,7 @@ const authMiddleware = async (req, res, next) => {
     const token = authHeader?.replace('Bearer', '')?.trim();
 
     if (!token) {
-        return res.error(401, "Token not found, please log in.")
+        return res.error(HTTP_STATUS.UNAUTHORIZED, ERROR_MESSAGES.TOKEN_NOT_FOUND)
     }
 
     try {
@@ -15,9 +16,9 @@ const authMiddleware = async (req, res, next) => {
         next();
     } catch (error) {
         if (error instanceof jwt.TokenExpiredError) {
-            return res.error(401, 'Access token expired');
+            return res.error(HTTP_STATUS.UNAUTHORIZED, ERROR_MESSAGES.ACCESS_TOKEN_EXPIRED);
         }
-        return res.error(403, 'Invalid access token');
+        return res.error(HTTP_STATUS.FORBIDDEN, ERROR_MESSAGES.INVALID_ACCESS_TOKEN);
     }
 }
 

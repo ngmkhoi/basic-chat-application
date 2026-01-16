@@ -1,5 +1,6 @@
 const authService = require('../services/auth.service');
-const { COOKIE } = require('../config/constants');
+const { COOKIE, HTTP_STATUS, ERROR_MESSAGES } = require('../config/constants');
+const authModel = require("../models/auth.model");
 
 const cookieOptions = {
     httpOnly: COOKIE.HTTP_ONLY,
@@ -14,7 +15,7 @@ const login = async (req, res) => {
         const result = await authService.login({email, password});
 
         if (!result) {
-            return res.error(401, 'Invalid email or password')
+            return res.error(HTTP_STATUS.UNAUTHORIZED, ERROR_MESSAGES.INVALID_CREDENTIALS)
         }
 
         res.cookie(COOKIE.REFRESH_TOKEN_NAME, result.refreshToken, cookieOptions);
@@ -22,12 +23,12 @@ const login = async (req, res) => {
         res.success({
             user: result.user,
             accessToken: result.accessToken,
-        }, 200);
+        }, HTTP_STATUS.OK);
     } catch (error) {
-        if (error.message === 'Invalid email or password') {
-            return res.error(401, 'Invalid email or password');
+        if (error.message === ERROR_MESSAGES.INVALID_CREDENTIALS) {
+            return res.error(HTTP_STATUS.UNAUTHORIZED, ERROR_MESSAGES.INVALID_CREDENTIALS);
         }
-        res.error(500, error.message);
+        res.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message);
     }
 }
 
@@ -41,20 +42,30 @@ const createUser = async (req, res) => {
         res.success({
             user: result.user,
             accessToken: result.accessToken,
-        }, 201);
+        }, HTTP_STATUS.CREATED);
     } catch (error) {
-        if (error.message === 'User already exists') {
-            return res.error(409, error.message);
+        if (error.message === ERROR_MESSAGES.USER_ALREADY_EXISTS) {
+            return res.error(HTTP_STATUS.CONFLICT, error.message);
         }
-        res.error(500, 'Internal server error');
+        res.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, ERROR_MESSAGES.INTERNAL_ERROR);
     }
+}
+
+const getUserInfo = async (req, res) => {
+     try {
+         const userId = req.user.id;
+         const userInformation = await authModel.findById(userId);
+         res.success(userInformation);
+     } catch (error) {
+         res.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, ERROR_MESSAGES.INTERNAL_ERROR);
+     }
 }
 
 const refreshToken = async (req, res) => {
     try {
         const refreshToken = req.cookies[COOKIE.REFRESH_TOKEN_NAME];
         if (!refreshToken) {
-            return res.error(401, 'Token not found, please log in.');
+            return res.error(HTTP_STATUS.UNAUTHORIZED, ERROR_MESSAGES.TOKEN_NOT_FOUND);
         }
         const result = await authService.createNewToken(refreshToken);
         res.cookie(COOKIE.REFRESH_TOKEN_NAME, result.refreshToken, cookieOptions);
@@ -62,12 +73,12 @@ const refreshToken = async (req, res) => {
         res.success({
             user: result.user,
             accessToken: result.accessToken
-        }, 200);
+        }, HTTP_STATUS.OK);
     } catch (error) {
         if (error.message.includes('Invalid') || error.message.includes('expired')) {
-            return res.error(403, error.message);
+            return res.error(HTTP_STATUS.FORBIDDEN, error.message);
         }
-        res.error(500, 'Internal server error');
+        res.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, ERROR_MESSAGES.INTERNAL_ERROR);
     }
 }
 
@@ -75,18 +86,19 @@ const logout = async (req, res) => {
     try {
         const refreshToken = req.cookies[COOKIE.REFRESH_TOKEN_NAME];
         if (!refreshToken) {
-            return res.error(401, 'Token not found, please log in.');
+            return res.error(HTTP_STATUS.UNAUTHORIZED, ERROR_MESSAGES.TOKEN_NOT_FOUND);
         }
         const result = await authService.logoutUser(refreshToken);
-        res.success(result, 200);
+        res.success(result, HTTP_STATUS.OK);
         res.clearCookie(COOKIE.REFRESH_TOKEN_NAME);
     } catch (error) {
-        res.error(500, error.message);
+        res.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message);
     }
 }
 module.exports = {
     login,
     createUser,
+    getUserInfo,
     refreshToken,
     logout,
 }

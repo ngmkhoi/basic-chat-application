@@ -1,6 +1,7 @@
 const pool = require('../config/database');
 const conversationModel = require('../models/conversations.model');
 const messagesModel = require('../models/messages.model');
+const { ERROR_MESSAGES } = require('../config/constants');
 
 const conversationService = {
     createConversation: async ({ name, type, participantIds, creatorId }) => {
@@ -13,7 +14,7 @@ const conversationService = {
 
             if (type === 'direct') {
                 if(finalMemberIds.length !== 2){
-                    throw new Error("Direct chat only have two members.");
+                    throw new Error(ERROR_MESSAGES.DIRECT_CHAT_TWO_MEMBERS);
                 }
 
                 const partnerId = finalMemberIds.find(id => id !== creatorId) || creatorId;
@@ -29,7 +30,7 @@ const conversationService = {
                     return {
                         conversationId: existingConvId,
                         isExisting: true,
-                        message: "This conversation has already existed."
+                        message: ERROR_MESSAGES.CONVERSATION_EXISTS
                     };
                 }
             }
@@ -70,11 +71,11 @@ const conversationService = {
         try {
             const conversation = await conversationModel.findById(connection, conversationId);
             if (!conversation) {
-                throw new Error("Not found conversation.");
+                throw new Error(ERROR_MESSAGES.CONVERSATION_NOT_FOUND);
             }
 
             if (conversation.type !== 'group') {
-                throw new Error("Can not add more participants in to direct chat.");
+                throw new Error(ERROR_MESSAGES.CANNOT_ADD_TO_DIRECT);
             }
 
             const isAlreadyInGroup = await conversationModel.checkExistingParticipant(
@@ -84,25 +85,24 @@ const conversationService = {
             );
 
             if (isAlreadyInGroup) {
-                throw new Error("This user has already existed in the conversation.");
+                throw new Error(ERROR_MESSAGES.USER_ALREADY_IN_CONVERSATION);
             }
 
             await conversationModel.addParticipant(connection, conversationId, userIdToAdd);
 
-            return { message: "Added participant successfully." };
+            return { message: ERROR_MESSAGES.PARTICIPANT_ADDED };
 
         } finally {
             connection.release();
         }
     },
-    
     sendMessage: async ({ conversationId, senderId, content }) => {
         const connection = await pool.getConnection();
         try {
             // Check if conversation exists
             const conversation = await conversationModel.findById(connection, conversationId);
             if (!conversation) {
-                throw new Error("Conversation not found.");
+                throw new Error(ERROR_MESSAGES.CONVERSATION_NOT_FOUND);
             }
 
             // Check if sender is a participant of the conversation
@@ -113,7 +113,7 @@ const conversationService = {
             );
 
             if (!isParticipant) {
-                throw new Error("You are not a participant of this conversation.");
+                throw new Error(ERROR_MESSAGES.NOT_PARTICIPANT);
             }
 
             // Create the message
@@ -145,7 +145,7 @@ const conversationService = {
             // Check if conversation exists
             const conversation = await conversationModel.findById(connection, conversationId);
             if (!conversation) {
-                throw new Error("Conversation not found.");
+                throw new Error(ERROR_MESSAGES.CONVERSATION_NOT_FOUND);
             }
 
             // Check if user is a participant of the conversation
@@ -156,7 +156,7 @@ const conversationService = {
             );
 
             if (!isParticipant) {
-                throw new Error("You are not a participant of this conversation.");
+                throw new Error(ERROR_MESSAGES.NOT_PARTICIPANT);
             }
 
             // Get all messages with sender info

@@ -1,4 +1,5 @@
 const usersService = require('../services/users.service');
+const { HTTP_STATUS } = require('../config/constants');
 
 const usersController = {
     search: async (req, res) => {
@@ -7,15 +8,15 @@ const usersController = {
             const currentUserId = req.user.id;
 
             if (!q || q.trim() === '') {
-                return res.success([], 200);
+                return res.success([], HTTP_STATUS.OK);
             }
 
             const users = await usersService.searchByEmail(q, currentUserId);
 
-            res.success(users, 200);
+            res.success(users, HTTP_STATUS.OK);
 
         } catch (error) {
-            res.error(500, error.message);
+            res.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message);
         }
     }
 };
