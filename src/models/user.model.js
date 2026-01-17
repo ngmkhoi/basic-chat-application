@@ -1,7 +1,7 @@
 const pool = require('../config/database');
 const { SEARCH } = require('../config/constants');
 
-const usersModel = {
+const userModel = {
     searchByEmail: async (query, currentUserId) => {
         const [users] = await pool.query(
             `SELECT id, email, full_name 
@@ -14,4 +14,4 @@ const usersModel = {
     }
 };
 
-module.exports = usersModel;
+module.exports = userModel;

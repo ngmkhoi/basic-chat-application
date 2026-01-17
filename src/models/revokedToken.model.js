@@ -1,6 +1,6 @@
 const pool = require('../config/database');
 
-const refreshTokenModel = {
+const revokedTokenModel = {
     createRefreshToken: async (userId, token, expiresAt) => {
         const [rows] = await pool.query(
             `insert into refresh_tokens (user_id, token, expired_at) values (?, ?, ?)`, [userId, token, expiresAt]
@@ -33,4 +33,4 @@ const refreshTokenModel = {
     }
 }
 
-module.exports = refreshTokenModel;
+module.exports = revokedTokenModel;

@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const {SecretAccess, SecretRefresh} = require("../config/jwt");
 const { AUTH } = require("../config/constants");
-const refreshTokenModel = require("../models/refreshToken.model");
+const refreshTokenModel = require("../models/revokedToken.model");
 
 const tokenGenerate = async (user, expiresAt) => {
     const accessToken = jwt.sign(

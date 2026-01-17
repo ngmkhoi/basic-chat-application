@@ -1,5 +1,5 @@
 const authModel = require("../models/auth.model");
-const refreshTokenModel = require("../models/refreshToken.model");
+const refreshTokenModel = require("../models/revokedToken.model");
 const bcrypt = require('bcrypt');
 const saltRounds = process.env.SALT_ROUNDS;
 const jwt = require('jsonwebtoken');

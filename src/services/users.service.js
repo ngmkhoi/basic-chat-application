@@ -1,4 +1,4 @@
-const usersModel = require('../models/users.model');
+const usersModel = require('../models/user.model');
 
 const usersService = {
     searchByEmail: async (query, currentUserId) => {
