@@ -23,6 +23,7 @@ const login = async (req, res) => {
         res.success({
             user: result.user,
             accessToken: result.accessToken,
+            refreshToken: result.refreshToken,
         }, HTTP_STATUS.OK);
     } catch (error) {
         if (error.message === ERROR_MESSAGES.INVALID_CREDENTIALS) {
@@ -42,6 +43,7 @@ const createUser = async (req, res) => {
         res.success({
             user: result.user,
             accessToken: result.accessToken,
+            refreshToken: result.refreshToken
         }, HTTP_STATUS.CREATED);
     } catch (error) {
         if (error.message === ERROR_MESSAGES.USER_ALREADY_EXISTS) {
@@ -54,7 +56,7 @@ const createUser = async (req, res) => {
 const getUserInfo = async (req, res) => {
      try {
          const userId = req.user.id;
-         const userInformation = await authModel.findById(userId);
+         const userInformation = await authService.getCurrentUser(userId);
          res.success(userInformation);
      } catch (error) {
          res.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, ERROR_MESSAGES.INTERNAL_ERROR);
@@ -72,7 +74,8 @@ const refreshToken = async (req, res) => {
 
         res.success({
             user: result.user,
-            accessToken: result.accessToken
+            accessToken: result.accessToken,
+            refreshToken: result.refreshToken
         }, HTTP_STATUS.OK);
     } catch (error) {
         if (error.message.includes('Invalid') || error.message.includes('expired')) {

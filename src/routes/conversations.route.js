@@ -1,6 +1,6 @@
 const express = require("express");
 const conversationController = require("../controllers/conversation.controller");
-const authMiddleware = require("../middlewares/auth");
+const authMiddleware = require("../middlewares/authRequired");
 const router = express.Router();
 
 router.post("/", authMiddleware ,conversationController.create);

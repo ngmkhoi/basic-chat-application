@@ -2,7 +2,7 @@ const express = require("express");
 const {joiValidate} = require("../middlewares/joiValidate");
 const {registerSchema, loginSchema} = require("../schemas/userSchema");
 const authController = require("../controllers/auth.controller");
-const authMiddleware = require("../middlewares/auth");
+const authMiddleware = require("../middlewares/authRequired");
 const router = express.Router();
 
 router.post("/register", joiValidate(registerSchema), authController.createUser);
