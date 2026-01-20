@@ -1,7 +1,6 @@
 const authService = require('../services/auth.service');
-const { COOKIE, HTTP_STATUS, ERROR_MESSAGES } = require('../config/constants');
+const { COOKIE, HTTP_STATUS, ERROR_MESSAGES, RESPONSE_MESSAGES} = require('../config/constants');
 const emailService = require('../services/email.service');
-const tokenGenerate = require("../helpers/generateToken");
 const { SecretVerify } = require("../config/jwt")
 const jwt = require("jsonwebtoken");
 
@@ -39,17 +38,8 @@ const createUser = async (req, res) => {
     try {
         const { email, password, full_name } = req.body;
         const result = await authService.register({ email, password, full_name });
-        console.log(result)
-
         res.cookie(COOKIE.REFRESH_TOKEN_NAME, result.refreshToken, cookieOptions);
-
-        const { verifyEmailToken } = await tokenGenerate(result.user, {
-            includeAccess: false,
-            includeRefresh: false,
-            includeVerify: true
-        })
-        await emailService.sendVerifyEmail(result.user.email, "Verify email", verifyEmailToken);
-
+        await emailService.sendVerifyEmail(result.user, "Verify email");
         res.success({
             user: result.user,
             accessToken: result.accessToken,
@@ -116,6 +106,9 @@ const logout = async (req, res, next) => {
 const verifyEmail = async (req, res, next) => {
     try {
         const token = req.body.token;
+        if (!token) {
+            return res.error(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.INVALID_VERIFY_TOKEN);
+        }
         const payload = jwt.verify(token, SecretVerify);
         const result = await authService.verifyEmail(payload.id);
         res.success(result);
@@ -130,11 +123,25 @@ const verifyEmail = async (req, res, next) => {
     }
 }
 
+const resendVerifyToken = async (req, res, next) => {
+    try {
+        const user = req.user
+        await emailService.sendVerifyEmail(user, "Verify email");
+        res.success(RESPONSE_MESSAGES.RESEND_VERIFY_TOKEN, HTTP_STATUS.OK);
+    } catch (error) {
+        if(error.message !== ERROR_MESSAGES.INTERNAL_ERROR){
+            return res.error(HTTP_STATUS.CONFLICT, error.message);
+        }
+        res.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, ERROR_MESSAGES.INTERNAL_ERROR);
+    }
+}
+
 module.exports = {
     login,
     createUser,
     getUserInfo,
     refreshToken,
     logout,
-    verifyEmail
+    verifyEmail,
+    resendVerifyToken
 }

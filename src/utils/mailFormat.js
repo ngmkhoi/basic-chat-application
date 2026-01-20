@@ -64,7 +64,7 @@ const getVerifyEmailTemplate = (verifyUrl) => {
                                 If you didn't create an account, you can safely ignore this email.
                             </p>
                             <p style="margin: 0; color: #999999; font-size: 12px;">
-                                © ${new Date().getFullYear()} Your Company. All rights reserved.
+                                © ${new Date().getFullYear()} Khoivippro123 Company. All rights reserved.
                             </p>
                         </td>
                     </tr>

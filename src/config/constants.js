@@ -67,6 +67,7 @@ const HTTP_STATUS = {
     NOT_FOUND: 404,
     CONFLICT: 409,
     UNPROCESSABLE_ENTITY: 422,
+    TOO_MANY_REQUESTS: 429,
     INTERNAL_SERVER_ERROR: 500,
 };
 
@@ -94,13 +95,16 @@ const ERROR_MESSAGES = {
     USER_ALREADY_IN_CONVERSATION: 'This user has already existed in the conversation.',
     PARTICIPANT_ADDED: 'Added participant successfully.',
     CONVERSATION_EXISTS: 'This conversation has already existed.',
+    EMAIL_ALREADY_VERIFIED: 'Email has already been verified',
+    TOO_MANY_REQUESTS: 'Too many requests, please try again later',
 };
 
 // ========== RESPONSE MESSAGES ==========
 const RESPONSE_MESSAGES = {
     SUCCESS: 'success',
     ERROR: 'error',
-    VERIFIED: 'Email verified successfully'
+    VERIFIED: 'Email verified successfully',
+    RESEND_VERIFY_TOKEN: 'Verification email sent successfully'
 };
 
 module.exports = {

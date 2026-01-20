@@ -11,5 +11,6 @@ router.get("/me", authMiddleware, authController.getUserInfo);
 router.post("/refresh-token", authController.refreshToken);
 router.post("/logout", authController.logout);
 router.post("/verify-email", authController.verifyEmail)
+router.post("/resend-verify-token", authMiddleware ,authController.resendVerifyToken)
 
 module.exports = router;

@@ -29,6 +29,11 @@ const findById = async (userId) => {
     return users[0] || null;
 }
 
+const isEmailVerified = async (userId) => {
+    const [result] = await pool.query("select verified_at from users where id = ?", [userId]);
+    return result[0]?.verified_at !== null;
+}
+
 const verifyEmailById = async (userId) => {
     const [result] = await pool.query("update users set verified_at = now() where id = ? and verified_at is null", [userId])
     return result.affectedRows;
@@ -39,5 +44,6 @@ module.exports = {
     checkEmailExists,
     createUser,
     findById,
+    isEmailVerified,
     verifyEmailById
 }
