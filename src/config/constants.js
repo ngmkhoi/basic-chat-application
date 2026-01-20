@@ -26,7 +26,9 @@ const DATABASE = {
 const AUTH = {
     ACCESS_TOKEN_EXPIRY: '1h',
     REFRESH_TOKEN_EXPIRY: '7d',
+    VERIFY_TOKEN_EXPIRY: '2h',
     REFRESH_TOKEN_EXPIRY_MS: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
+    VERIFY_TOKEN_EXPIRY_MS: 2 * 60 * 60 * 1000, // 2 hours in milliseconds
 };
 
 // ========== COOKIE ==========
@@ -75,8 +77,11 @@ const ERROR_MESSAGES = {
     INVALID_ACCESS_TOKEN: 'Invalid access token',
     INVALID_REFRESH_TOKEN: 'Invalid refresh token',
     REFRESH_TOKEN_EXPIRED: 'Refresh token expired',
+    INVALID_VERIFY_TOKEN: 'Invalid verify token',
+    VERIFY_TOKEN_EXPIRED: 'Verification token has expired',
     INVALID_CREDENTIALS: 'Invalid email or password',
     USER_ALREADY_EXISTS: 'User already exists',
+    USER_NOT_FOUND: 'User not found',
     INTERNAL_ERROR: 'Internal server error',
     FAILED_LOGOUT: 'Failed to logout',
     LOGOUT_SUCCESS: 'Logged out successfully',
@@ -95,6 +100,7 @@ const ERROR_MESSAGES = {
 const RESPONSE_MESSAGES = {
     SUCCESS: 'success',
     ERROR: 'error',
+    VERIFIED: 'Email verified successfully'
 };
 
 module.exports = {

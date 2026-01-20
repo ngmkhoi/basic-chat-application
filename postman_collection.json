@@ -115,7 +115,7 @@
 						"method": "POST",
 						"header": [],
 						"url": {
-							"raw": "{{baseUrl}}/api/auth/refresh",
+							"raw": "{{baseUrl}}/api/auth/refresh-token",
 							"host": [
 								"{{baseUrl}}"
 							],

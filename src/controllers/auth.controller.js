@@ -1,6 +1,9 @@
 const authService = require('../services/auth.service');
 const { COOKIE, HTTP_STATUS, ERROR_MESSAGES } = require('../config/constants');
-const authModel = require("../models/auth.model");
+const emailService = require('../services/email.service');
+const tokenGenerate = require("../helpers/generateToken");
+const { SecretVerify } = require("../config/jwt")
+const jwt = require("jsonwebtoken");
 
 const cookieOptions = {
     httpOnly: COOKIE.HTTP_ONLY,
@@ -23,13 +26,12 @@ const login = async (req, res) => {
         res.success({
             user: result.user,
             accessToken: result.accessToken,
-            refreshToken: result.refreshToken,
         }, HTTP_STATUS.OK);
     } catch (error) {
         if (error.message === ERROR_MESSAGES.INVALID_CREDENTIALS) {
             return res.error(HTTP_STATUS.UNAUTHORIZED, ERROR_MESSAGES.INVALID_CREDENTIALS);
         }
-        res.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message);
+        res.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, ERROR_MESSAGES.INTERNAL_ERROR);
     }
 }
 
@@ -37,13 +39,20 @@ const createUser = async (req, res) => {
     try {
         const { email, password, full_name } = req.body;
         const result = await authService.register({ email, password, full_name });
+        console.log(result)
 
         res.cookie(COOKIE.REFRESH_TOKEN_NAME, result.refreshToken, cookieOptions);
+
+        const { verifyEmailToken } = await tokenGenerate(result.user, {
+            includeAccess: false,
+            includeRefresh: false,
+            includeVerify: true
+        })
+        await emailService.sendVerifyEmail(result.user.email, "Verify email", verifyEmailToken);
 
         res.success({
             user: result.user,
             accessToken: result.accessToken,
-            refreshToken: result.refreshToken
         }, HTTP_STATUS.CREATED);
     } catch (error) {
         if (error.message === ERROR_MESSAGES.USER_ALREADY_EXISTS) {
@@ -54,13 +63,16 @@ const createUser = async (req, res) => {
 }
 
 const getUserInfo = async (req, res) => {
-     try {
-         const userId = req.user.id;
-         const userInformation = await authService.getCurrentUser(userId);
-         res.success(userInformation);
-     } catch (error) {
-         res.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, ERROR_MESSAGES.INTERNAL_ERROR);
-     }
+    try {
+        const userId = req.user.id;
+        const userInformation = await authService.getCurrentUser(userId);
+        res.success(userInformation);
+    } catch (error) {
+        if (error.message === 'User does not exist') {
+            return res.error(HTTP_STATUS.NOT_FOUND, ERROR_MESSAGES.USER_NOT_FOUND);
+        }
+        res.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, ERROR_MESSAGES.INTERNAL_ERROR);
+    }
 }
 
 const refreshToken = async (req, res) => {
@@ -73,36 +85,56 @@ const refreshToken = async (req, res) => {
         res.cookie(COOKIE.REFRESH_TOKEN_NAME, result.refreshToken, cookieOptions);
 
         res.success({
-            user: result.user,
             accessToken: result.accessToken,
-            refreshToken: result.refreshToken
         }, HTTP_STATUS.OK);
     } catch (error) {
         if (error.message.includes('Invalid') || error.message.includes('expired')) {
-            return res.error(HTTP_STATUS.FORBIDDEN, error.message);
+            return res.error(HTTP_STATUS.UNAUTHORIZED, error.message);
         }
         res.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, ERROR_MESSAGES.INTERNAL_ERROR);
     }
 }
 
-const logout = async (req, res) => {
+const logout = async (req, res, next) => {
     try {
         const refreshToken = req.cookies[COOKIE.REFRESH_TOKEN_NAME];
+
         if (!refreshToken) {
-            return res.error(HTTP_STATUS.UNAUTHORIZED, ERROR_MESSAGES.TOKEN_NOT_FOUND);
+            res.clearCookie(COOKIE.REFRESH_TOKEN_NAME);
+            return res.success(ERROR_MESSAGES.LOGOUT_SUCCESS, HTTP_STATUS.OK);
         }
-        const result = await authService.logoutUser(refreshToken);
-        res.success(result, HTTP_STATUS.OK);
+
+        await authService.logoutUser(refreshToken);
         res.clearCookie(COOKIE.REFRESH_TOKEN_NAME);
+        res.success(ERROR_MESSAGES.LOGOUT_SUCCESS, HTTP_STATUS.OK);
     } catch (error) {
-        res.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, error.message);
+        res.clearCookie(COOKIE.REFRESH_TOKEN_NAME);
+        res.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, ERROR_MESSAGES.INTERNAL_ERROR);
     }
 }
+
+const verifyEmail = async (req, res, next) => {
+    try {
+        const token = req.body.token;
+        const payload = jwt.verify(token, SecretVerify);
+        const result = await authService.verifyEmail(payload.id);
+        res.success(result);
+    } catch (error) {
+        if (error instanceof jwt.TokenExpiredError) {
+            return res.error(HTTP_STATUS.UNAUTHORIZED, ERROR_MESSAGES.VERIFY_TOKEN_EXPIRED);
+        }
+        if (error instanceof jwt.JsonWebTokenError) {
+            return res.error(HTTP_STATUS.UNAUTHORIZED, ERROR_MESSAGES.INVALID_VERIFY_TOKEN);
+        }
+        res.error(HTTP_STATUS.INTERNAL_SERVER_ERROR, ERROR_MESSAGES.INTERNAL_ERROR);
+    }
+}
+
 module.exports = {
     login,
     createUser,
     getUserInfo,
     refreshToken,
     logout,
+    verifyEmail
 }
-

@@ -29,9 +29,15 @@ const findById = async (userId) => {
     return users[0] || null;
 }
 
+const verifyEmailById = async (userId) => {
+    const [result] = await pool.query("update users set verified_at = now() where id = ? and verified_at is null", [userId])
+    return result.affectedRows;
+}
+
 module.exports = {
     findByEmail,
     checkEmailExists,
     createUser,
-    findById
+    findById,
+    verifyEmailById
 }

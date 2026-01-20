@@ -8,7 +8,8 @@ const router = express.Router();
 router.post("/register", joiValidate(registerSchema), authController.createUser);
 router.post("/login", joiValidate(loginSchema), authController.login);
 router.get("/me", authMiddleware, authController.getUserInfo);
-router.post("/refresh_token", authController.refreshToken);
-router.post("/logout", authController.logout);  
+router.post("/refresh-token", authController.refreshToken);
+router.post("/logout", authController.logout);
+router.post("/verify-email", authController.verifyEmail)
 
 module.exports = router;
