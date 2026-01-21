@@ -75,6 +75,7 @@ const HTTP_STATUS = {
 const ERROR_MESSAGES = {
     TOKEN_NOT_FOUND: 'Token not found, please log in.',
     ACCESS_TOKEN_EXPIRED: 'Access token expired',
+    TOKEN_REVOKED: 'Token has been revoked',
     INVALID_ACCESS_TOKEN: 'Invalid access token',
     INVALID_REFRESH_TOKEN: 'Invalid refresh token',
     REFRESH_TOKEN_EXPIRED: 'Refresh token expired',

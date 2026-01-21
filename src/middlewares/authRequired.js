@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const {SecretAccess} = require("../config/jwt");
 const { HTTP_STATUS, ERROR_MESSAGES } = require('../config/constants');
+const {isBlacklisted} = require("../helpers/tokenBlacklist");
 require('dotenv').config();
 
 const authMiddleware = async (req, res, next) => {
@@ -9,6 +10,10 @@ const authMiddleware = async (req, res, next) => {
 
     if (!token) {
         return res.error(HTTP_STATUS.UNAUTHORIZED, ERROR_MESSAGES.TOKEN_NOT_FOUND)
+    }
+
+    if (await isBlacklisted(token)) {
+        return res.error(HTTP_STATUS.UNAUTHORIZED, ERROR_MESSAGES.TOKEN_REVOKED);
     }
 
     try {

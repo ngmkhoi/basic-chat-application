@@ -3,6 +3,7 @@ const { COOKIE, HTTP_STATUS, ERROR_MESSAGES, RESPONSE_MESSAGES} = require('../co
 const emailService = require('../services/email.service');
 const { SecretVerify } = require("../config/jwt")
 const jwt = require("jsonwebtoken");
+const { addToBlacklist } = require('../helpers/tokenBlacklist');
 
 const cookieOptions = {
     httpOnly: COOKIE.HTTP_ONLY,
@@ -88,6 +89,17 @@ const refreshToken = async (req, res) => {
 const logout = async (req, res, next) => {
     try {
         const refreshToken = req.cookies[COOKIE.REFRESH_TOKEN_NAME];
+        const authHeader = req.headers["authorization"];
+        const accessToken = authHeader?.replace('Bearer', '')?.trim();
+
+        // Add accessToken to blacklist to revoke it immediately
+        if (accessToken) {
+            try {
+                await addToBlacklist(accessToken);
+            } catch (error) {
+                console.error('Error adding token to blacklist:', error);
+            }
+        }
 
         if (!refreshToken) {
             res.clearCookie(COOKIE.REFRESH_TOKEN_NAME);
