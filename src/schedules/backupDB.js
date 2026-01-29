@@ -69,11 +69,10 @@ async function backupDB() {
         filePath = path.join(backupDir, fileName);
         await executeMysqldump(filePath);
         const response = await driveService.uploadFile(fileName, filePath, 'application/sql');
-        console.log(response)
         await emailService.sendBackupNotification(adminEmail, {
             status: 'SUCCESS',
             fileName: fileName,
-            driveField: response.id,
+            driveFileId: response.id,
             time: new Date().toLocaleString()
         });
         console.log('Backup Job Finished Successfully')

@@ -5,7 +5,7 @@ const { CronJob } = require("cron")
 const {TIMEZONE} = require("./src/config/constants")
 const dailyReport = require("./src/schedules/dailyReport")
 const backupDB = require("./src/schedules/backupDB")
-
+const cleanupExpiredTokens = require("./src/schedules/cleanupExpiredTokens.js")
 
 new CronJob(
     '0 2 * * *',
@@ -22,4 +22,13 @@ new CronJob(
     true,
     TIMEZONE.Ho_Chi_Minh
 )
+
+new CronJob(
+    '0 1 * * *',
+    cleanupExpiredTokens,
+    null,
+    true,
+    TIMEZONE.Ho_Chi_Minh
+)
+
 

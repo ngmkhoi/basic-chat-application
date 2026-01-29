@@ -4,7 +4,6 @@ const drive = require('../config/googleDrive');
 const uploadFile = async (fileName, filePath, mimeType) => {
     try {
         const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
-        console.log(`[Drive Service] Uploading to Folder ID: ${folderId}`);
         if(!folderId) {
             throw new Error('Missing GOOGLE_DRIVE_FOLDER_ID in .env');
         }
@@ -22,13 +21,12 @@ const uploadFile = async (fileName, filePath, mimeType) => {
             supportsAllDrives: true
         });
 
-        console.log('File ID:', response.data.id);
         return response.data;
     } catch (error) {
         if (error.response && error.response.data) {
-            console.error('❌ Google Drive Error Detail:', JSON.stringify(error.response.data, null, 2));
+            console.error('Google Drive Error Detail:', JSON.stringify(error.response.data, null, 2));
         } else {
-            console.error('❌ Google Drive Upload Error:', error.message);
+            console.error('Google Drive Upload Error:', error.message);
         }
         throw error;
     }

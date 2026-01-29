@@ -25,9 +25,9 @@ const revokedTokenModel = {
         );
         return result.affectedRows;
     },
-    deleteExpiredToken: async () => {
+    deleteExpiredToken: async (limit = 1000) => {
         const [result] = await pool.query(
-            `delete from refresh_tokens where expired_at < NOW() or revoked = true`
+            `delete from refresh_tokens where expired_at < NOW() or revoked = true limit ?`, [limit]
         );
         return result.affectedRows;
     }

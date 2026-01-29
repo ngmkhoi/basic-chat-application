@@ -159,6 +159,27 @@ class AuthService {
 
         return { message: RESPONSE_MESSAGES.PASSWORD_CHANGE_SUCCESS };
     }
+
+    async deleteExpiredRefreshTokens(limit = 1000) {
+        try {
+            const deletedCount = await refreshTokenModel.deleteExpiredToken(limit)
+            console.log(`There are ${deletedCount} tokens deleted at ${new Date()}`)
+            return {
+                status: 'SUCCESS',
+                deletedCount: deletedCount,
+                time: new Date().toLocaleString('vi-VN'),
+                error: null
+            };
+        } catch (error) {
+            console.error('Error deleting tokens:', error)
+            return {
+                status: 'ERROR',
+                deletedCount: 0,
+                time: new Date().toLocaleString('vi-VN'),
+                error: error.message
+            }
+        }
+    }
 }
 
 module.exports = new AuthService();
