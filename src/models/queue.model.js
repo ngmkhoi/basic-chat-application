@@ -35,6 +35,12 @@ class Queue {
         );
         return rows;
     }
+    async deleteCompletedJob(limit = 1000) {
+        const [deletedJob] = await pool.query(
+            `delete from jobs where status = 'completed' limit ?`, [limit]
+        );
+        return deletedJob.affectedRows;
+    }
     async markProcessing(id) {
         await pool.query(
             `UPDATE jobs 

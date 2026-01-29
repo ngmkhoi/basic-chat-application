@@ -5,6 +5,7 @@ const getPasswordChangeEmailTemplate = require("../utils/passwordChangeEmailTemp
 const getDailyReportEmailTemplate = require("../utils/dailyReportEmailTemplate");
 const getBackupNotificationEmailTemplate = require("../utils/backupNotificationEmailTemplate");
 const getTokenCleanupEmailTemplate = require("../utils/tokenCleanupEmailTemplate");
+const getJobCleanupEmailTemplate = require("../utils/jobCleanupEmailTemplate");
 const tokenGenerate = require("../helpers/generateToken");
 const {ERROR_MESSAGES} = require("../config/constants");
 
@@ -92,6 +93,23 @@ class EmailService {
 
         const info = await transporter.sendMail({
             from: '"System Cleanup" <nguyenminhkhoi0411@gmail.com>',
+            to: email,
+            subject: subject,
+            html: htmlTemplate,
+        });
+        return info;
+    }
+
+    async sendDeletedJobNotification(email, data) {
+        const { status, deletedCount } = data;
+        const subject = status === 'SUCCESS'
+            ? `✅ [Job Cleanup] Removed ${deletedCount} Completed Jobs`
+            : `❌ [Job Cleanup Failed] System Alert`;
+
+        const htmlTemplate = getJobCleanupEmailTemplate(data);
+
+        const info = await transporter.sendMail({
+            from: '"Queue Manager" <nguyenminhkhoi0411@gmail.com>',
             to: email,
             subject: subject,
             html: htmlTemplate,

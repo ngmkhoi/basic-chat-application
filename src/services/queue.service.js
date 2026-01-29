@@ -1,4 +1,5 @@
 const queueModel = require('../models/queue.model');
+const refreshTokenModel = require("../models/revokedToken.model");
 
 class QueueService {
     async addJob(type, payload) {
@@ -31,6 +32,27 @@ class QueueService {
     async markFailed(jobId, error) {
         await queueModel.markFailed(jobId);
         console.error(`❌ Job ${jobId} failed:`, error.message);
+    }
+
+    async deleteCompletedJob(limit) {
+        try {
+            const deletedCount = await queueModel.deleteCompletedJob(limit);
+            console.log(`There are ${deletedCount} jobs deleted at ${new Date()}`)
+            return {
+                status: 'SUCCESS',
+                deletedCount: deletedCount,
+                time: new Date().toLocaleString('vi-VN'),
+                error: null
+            };
+        } catch (error) {
+            console.error('Error while deleting jobs:', error)
+            return {
+                status: 'ERROR',
+                deletedCount: 0,
+                time: new Date().toLocaleString('vi-VN'),
+                error: error.message
+            }
+        }
     }
 
     async processJob(job, tasks) {
